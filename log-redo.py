@@ -23,3 +23,5 @@ def openFile {
     print("File opened.")
     return file
 }
+
+"teste de commit"
