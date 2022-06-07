@@ -1,6 +1,8 @@
 import psycopg2
 
-#Conectando Banco Postgres
+
+
+""" Conectando ao banco de dados """
 def conectandoBanco():
     conn = psycopg2.connect(
     host='localhost'
@@ -11,17 +13,23 @@ def conectandoBanco():
     print('conectado') #para teste
     return conn
 
+
 def conecta(con, sql):
     cur = con.cursor()
     cur.execute(sql)
     con.commit()
 
-def openFile {
 
-    print("Opening file...")
-    file = open("nome-do-arquivo", "r")
-    print("File opened.")
-    return file
-}
+""" Abrindo arquivo de log """
+def openFile(fileName):
+    try:
+        file = open(fileName, 'r')
+        print('Arquivo aberto com sucesso')
+        return file
+    except:
+        print('Erro ao abrir arquivo')
 
-"teste de commit"
+
+
+file = openFile('entrada1.txt')
+
