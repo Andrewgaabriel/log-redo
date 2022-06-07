@@ -1,25 +1,22 @@
 import psycopg2
 
-
-
-""" Conectando ao banco de dados """
+#Conectando Banco Postgres
 def conectandoBanco():
-    conn = psycopg2.connect(
-    host='localhost'
-    dbname='TrabalhoLog'
-    user='postgres'
-    password='1234'
-    )
-    print('conectado') #para teste
-    return conn
+    con = psycopg2.connect(host='localhost',
+                            dbname='trabalholog',
+                            user='postgres',
+                            password='1234')
+    #print('conectado')
+    return con
 
+def criar_db(sql):
+  con = conectandoBanco()
+  cur = con.cursor()
+  cur.execute(sql)
+  con.commit()
+  con.close()
 
-def conecta(con, sql):
-    cur = con.cursor()
-    cur.execute(sql)
-    con.commit()
-
-
+  
 """ Abrindo arquivo de log """
 def openFile(fileName):
     try:
