@@ -26,16 +26,16 @@ def executa_db(sql):
         return 1
     cur.close()
 
-# Drop da tabela caso ela ja exista 
+"""  Drop da tabela caso ela ja exista  """
 sql = 'DROP TABLE IF EXISTS log'
 executa_db(sql)
 
-#Criar Tabela log 
+"""  Criar Tabela log  """
 sql = 'CREATE TABLE log'
 executa_db(sql)
 
 
-# Inserindo Registro
+"""  Inserindo Registro """
 def insereBanco( id, A, B ):
     sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
