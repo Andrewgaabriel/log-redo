@@ -1,3 +1,4 @@
+from cmath import log
 import psycopg2
 import sys
 
@@ -13,22 +14,32 @@ def conectandoBanco():
 
 # Esecuta comando database sql
 def executa_db(sql):
-  con = conectandoBanco()
-  cur = con.cursor()
-  cur.execute(sql)
-  con.commit()
-  con.close()
-
+    con = conectandoBanco()
+    cur = con.cursor()
+    try:
+        cur.execute(sql)
+        con.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        con.rollback()
+        con.close()
+        return 1
+    cur.close()
 
 # Drop da tabela caso ela ja exista 
 sql = 'DROP TABLE IF EXISTS log'
 executa_db(sql)
 
 #Criar Tabela log 
-sql = 'CREATE TABLE log (id INTEGER, colunaA INTEGER, colunaB INTEGER, valor INTEGER)'
+sql = 'CREATE TABLE log'
 executa_db(sql)
 
-  
+
+# Inserindo Registro
+def insereBanco( id, A, B ):
+    sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
+    executa_db(sql)
+
+
 """ Abrindo arquivo de log """
 def openFile(fileName):
     try:
