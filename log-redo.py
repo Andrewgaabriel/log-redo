@@ -70,6 +70,37 @@ def getData(file):
     return data
 
 
+""" Função que pega os dados necessários para construir/inicializar a tabela """
+def getInitTable(data):
+    initTable = []
+
+    for line in data:
+        if line == '\n':
+            break
+        else:
+            initTable.append(line)
+    
+    return initTable
+
+
+""" Função que pega os dados necessários para efetuar o redo """
+def getRedoInfos(data):
+    redoInfos = []
+    data.reverse()
+
+    for line in data:
+        if line == '\n':
+            break
+        else:
+            redoInfos.append(line)
+    
+    return redoInfos
+
+
+
+
+
+
 
 """ 
 Função que divide os dados em: -Dados para fazer o REDO e - Dados para preencher a tabela
@@ -93,6 +124,17 @@ def splitData(data):
 
 file = openFile(getParam()) # Abrindo arquivo de log
 data = getData(file) # Pegando dados do arquivo e colocando em um vetor
+initTable = getInitTable(data) # Pegando os dados para preencher a tabela
+redoInfos = getRedoInfos(data) # Pegando os dados para fazer o REDO
+
+
+
+print("\nDados totais do arquivo:\n")
+printFile(data)
+print("\nDados para adicionar na tabela:\n")
+printFile(initTable)
+print("\nDados para fazer o REDO:\n")
+printFile(redoInfos)
 
 
 
