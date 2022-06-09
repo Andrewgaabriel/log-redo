@@ -3,19 +3,21 @@ import psycopg2
 import sys
 
 
-# Conectando Banco Postgres
+""" Faz a conexão com o Banco de Dados """
 def conectandoBanco():
-    con = psycopg2.connect(host='localhost',
+    con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
                             password='1234')
-    #print('conectado')
     return con
 
-# Esecuta comando database sql
+
+
+""" Executa algum comando SQL no banco de dados """
 def executa_db(sql):
     con = conectandoBanco()
     cur = con.cursor()
+<<<<<<< HEAD
     try:
         cur.execute(sql)
         con.commit()
@@ -24,12 +26,21 @@ def executa_db(sql):
         con.close()
         return 1
     cur.close()
+=======
+    cur.execute(sql)
+    con.commit()
+    con.close()
+
+
+
+>>>>>>> cddeac7ef90458034ce1918a184f62af91ff1c25
 
 # Drop da tabela caso ela ja exista 
 sql = 'DROP TABLE IF EXISTS log'
 executa_db(sql)
 
 #Criar Tabela log 
+<<<<<<< HEAD
 sql = 'CREATE TABLE log'
 executa_db(sql)
 
@@ -38,6 +49,13 @@ executa_db(sql)
 def insereBanco( id, A, B ):
     sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
+=======
+sql = 'CREATE TABLE log (id INTEGER, colunaA INTEGER, colunaB INTEGER)'
+executa_db(sql)
+
+  
+
+>>>>>>> cddeac7ef90458034ce1918a184f62af91ff1c25
 
 
 """ Abrindo arquivo de log """
