@@ -22,26 +22,42 @@
 
 ## **Funções Implementadas:**
 
-- *Nome da função + O que ela faz*  
-`codigo aqui`
+   
+`conectandoBanco()`: : =  *Faz a conexão entre a aplicação e o banco de dados.*
 
-- *Nome da função + O que ela faz*  
-`codigo aqui`
+`executa_db()`: : =  *Efetua um comando SQL com tratamento de erro.*
 
-- *Nome da função + O que ela faz*  
-`codigo aqui`
+`insereBanco()`: : =  *Insere o valor passado pelos parâmetros no banco de dados*
 
+`openFile()`: : =  *Abre o arquivo que foi passado por parâmetro*
 
+`printFile()`: : =  *Faz a impressão linha a linha de um vetor/file/lista*
+
+`getParam()`: : =  *Retorna o parâmetro que foi passado na execução da aplicação no terminal*
+
+`getData()`: : =  *Pega os dados presentes no arquivo de entrada e o passa para um vetor de dados*
+
+`getInitTable()`: : =  *Separa do vetor de dados as informações que serão utilizadas na hora de inicializar a tabela*
+
+`getRedoinfos()`: : =  *Separa do vetor de dados as informações que serão utilizadas na hora de executar o REDO*
+
+<!-- `nomedafunção()`: : =  *descrição da função* -->
 
 
 <div id='como-testar'/>
 
 ## **Como testar/executar:**
 
-- *Como executar/descrição de como executar*  
-`codigo aqui`
+- **Requisitos:**
+    - *Python 3.7*
+    - *PostgreSQL*
 
-
+- **Como executar:**
+    - Você deve ter em um diretório o arquivo da aplicação e o arquivo de entrada.
+    - Execute o arquivo da aplicação no terminal da seguinte maneira:
+        ```
+        python3 log-redo.py <arquivo_de_entrada.txt>
+        ``` 
 
 
 <div id='mecanismo-de-log-redo'/>

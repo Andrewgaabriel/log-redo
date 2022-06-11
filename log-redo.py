@@ -8,7 +8,7 @@ def conectandoBanco():
     con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
-                            password='1234')
+                            password='postgres')
     return con
 
 """ -------------------------------------------------------------------------------------------- """
@@ -34,7 +34,7 @@ def executa_db(sql):
 
 """ --------------Inserindo Registro------------------------------------------------------------- """
 
-def insereBanco( id, A, B ):
+def insereBanco( id, A, B):
     sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
 
@@ -84,7 +84,7 @@ def getData(file):
 
 
 """ -----------------Função que pega os dados necessários para construir/inicializar a tabela----- """
-def getInitTable(data):
+def getInfoInit(data):
     initTable = []
 
     for line in data:
@@ -147,7 +147,7 @@ executa_db(sql)
 
 file = openFile(getParam()) # Abrindo arquivo de log
 data = getData(file) # Pegando dados do arquivo e colocando em um vetor
-initTable = getInitTable(data) # Pegando os dados para preencher a tabela
+initTable = getInfoInit(data) # Pegando os dados para preencher a tabela
 redoInfos = getRedoInfos(data) # Pegando os dados para fazer o REDO
 
 
