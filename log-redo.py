@@ -37,7 +37,7 @@ def executa_db(sql):
 def insereBanco( id, A, B):
     sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
-
+    #for ...
 """ -------------------------------------------------------------------------------------------- """
 
 
@@ -135,16 +135,16 @@ def getRedoInfos(data):
 """ -----------------------EXECUÇÃO PRINCIPAL--------------------------------------------------------------------- """
 
 
-"""  Drop da tabela caso ela ja exista  """
-sql = 'DROP TABLE IF EXISTS log'
-executa_db(sql)
 
+""" ---------------------------------Criar Tabela log------------------------------------------ """
+def createTable():
+    sql = 'DROP TABLE IF EXISTS log'
+    sql = 'CREATE TABLE log (id INTEGER PRIMARY KEY, colunaA INTEGER, colunaB INTEGER);'
+    executa_db(sql)
 
-"""  Criar Tabela log  """
-sql = 'CREATE TABLE log (id INTEGER PRIMARY KEY, colunaA INTEGER, colunaB INTEGER);'
-executa_db(sql)
+""" -------------------------------------------------------------------------------------------- """
 
-
+table = createTable() # Cria a tabela log (id, colunaA, colunaB)
 file = openFile(getParam()) # Abrindo arquivo de log
 data = getData(file) # Pegando dados do arquivo e colocando em um vetor
 initTable = getInfoInit(data) # Pegando os dados para preencher a tabela
@@ -158,9 +158,6 @@ print("\nDados para adicionar na tabela:\n")
 printFile(initTable)
 print("\nDados para fazer o REDO:\n")
 printFile(redoInfos)
-
-
-
 
 
 
