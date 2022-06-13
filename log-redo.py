@@ -3,6 +3,26 @@ import psycopg2
 import sys
 
 
+""" --------------------Estrutura de dados para armazenar as tuplas---------------------------- """
+class Linha:
+
+    def init(self):
+        self.id = 0
+        self.colunaA = ''
+        self.colunaB = ''
+
+    def setId(self, id):
+        self.id = id
+
+    def setColunaA(self, colunaA):
+        self.colunaA = colunaA
+
+    def setColunaB(self, colunaB):
+        self.colunaB = colunaB
+
+""" -------------------------------------------------------------------------------------------- """
+
+
 """ ------------------Faz a conexão com o Banco de Dados---------------------------------------- """
 def conectandoBanco():
     con = psycopg2.connect( host='localhost',
@@ -114,16 +134,32 @@ def getRedoInfos(data):
 """ -------------------------------------------------------------------------------------------- """
 
 
+""" --------------------------------------Iteração REDO----------------------------------------- """
+# NADA PRONTO
+""" def parserRedo(redoInfos):
+    for line in redoInfos:
+        line = line.split(' ')
+        id = int(line[0])
+        A = int(line[1])
+        B = int(line[2])
+        insereBanco(id, A, B) """
+
+""" ------------------------------------------------------------------------------------------ """
 
 
+
+""" ----------------------Verifica se existe objeto dado ID por parâmetro---------------------- """
 def getLinha(id, linhas):
     for linha in linhas:
         if linha.id == id:      
             return linha
     
     return None 
-    
 
+""" ------------------------------------------------------------------------------------------ """
+
+
+""" --------------Parseamento das informações iniciais para preencher a tabela---------------- """
 def parserInfoInit(infoInit):
 
     linhas = []
@@ -161,16 +197,25 @@ def parserInfoInit(infoInit):
     
     return linhas
         
-            
+""" ------------------------------------------------------------------------------------------ """           
 
 
-""" -----------------------EXECUÇÃO PRINCIPAL--------------------------------------------------------------------- """
+""" -----------------------------Percorre vetor e insere no banco------------------------------ """
+""" def nomedafuncao(linhas):
+    for linha in linhas:
+        id = linha.id
+        A = linha.colunaA
+        B = linha.colunaB
+        insereBanco(id, A, B)
+         """
 
+""" ------------------------------------------------------------------------------------------ """ 
 
 
 """ ---------------------------------Criar Tabela log------------------------------------------ """
 def createTable():
     sql = 'DROP TABLE IF EXISTS log'
+    executa_db(sql)
     sql = 'CREATE TABLE log (id INTEGER PRIMARY KEY, colunaA INTEGER, colunaB INTEGER);'
     executa_db(sql)
 
@@ -192,7 +237,6 @@ printFile(initTable)
 print("\nDados para fazer o REDO:\n")
 printFile(redoInfos)
 print("\nDados parseados\n")
-
 
 
 file.close()
