@@ -28,7 +28,7 @@ def conectandoBanco():
     con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
-                            password='postgres')
+                            password='1234')
     return con
 
 """ -------------------------------------------------------------------------------------------- """
@@ -49,16 +49,6 @@ def executa_db(sql):
     cur.close()
 
 """ -------------------------------------------------------------------------------------------- """
-
-
-
-""" --------------Inserindo Registro------------------------------------------------------------- """
-
-def insereBanco( id, A, B):
-    sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
-    executa_db(sql)
-""" -------------------------------------------------------------------------------------------- """
-
 
 
 """ -----------------Abrindo arquivo de log------------------------------------------------------- """
@@ -147,7 +137,6 @@ def getRedoInfos(data):
 """ ------------------------------------------------------------------------------------------ """
 
 
-
 """ ----------------------Verifica se existe objeto dado ID por parâmetro---------------------- """
 def getLinha(id, linhas):
     for linha in linhas:
@@ -200,14 +189,22 @@ def parserInfoInit(infoInit):
 """ ------------------------------------------------------------------------------------------ """           
 
 
+""" --------------Inserindo Registro------------------------------------------------------------- """
+
+def insereBanco( id, A, B):
+    sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
+    executa_db(sql)
+""" -------------------------------------------------------------------------------------------- """
+
+
 """ -----------------------------Percorre vetor e insere no banco------------------------------ """
-""" def nomedafuncao(linhas):
+def initTable(linhas):
     for linha in linhas:
         id = linha.id
         A = linha.colunaA
         B = linha.colunaB
         insereBanco(id, A, B)
-         """
+
 
 """ ------------------------------------------------------------------------------------------ """ 
 
@@ -221,19 +218,20 @@ def createTable():
 
 """ -------------------------------------------------------------------------------------------- """
 
-table = createTable() # Cria a tabela log (id, colunaA, colunaB)
+createTable() # Cria a tabela log (id, colunaA, colunaB)
 file = openFile(getParam()) # Abrindo arquivo de log
 data = getData(file) # Pegando dados do arquivo e colocando em um vetor
-initTable = getInfoInit(data) # Pegando os dados para preencher a tabela
+header = getInfoInit(data) # Pegando os dados para preencher a tabela
 redoInfos = getRedoInfos(data) # Pegando os dados para fazer o REDO
-tuplas = parserInfoInit(initTable)
+tuplas = parserInfoInit(header) #Pega os valores a serem inseridos no banco
+initTable(tuplas) #Insere valores no Banco
 
 
 
 print("\nDados totais do arquivo:\n")
 printFile(data)
 print("\nDados para adicionar na tabela:\n")
-printFile(initTable)
+printFile(header)
 print("\nDados para fazer o REDO:\n")
 printFile(redoInfos)
 print("\nDados parseados\n")
