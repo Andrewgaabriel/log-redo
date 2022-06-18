@@ -4,25 +4,18 @@
 
 *******
 
-
 ## **Conteúdo:**
+
 1. *[Funções Implementadas](#funções)*
 2. *[Como testar/executar ?](#como-testar)*
 3. *[Como funciona o mecanismo de Log REDO ?](#mecanismo-de-log-redo)*
 4. *[Requisitos](#requisitos)*
 
-
 *******
+<div id='funções'>
 
+## **Funções Implementadas:**  
 
-
-
-
-<div id='funções'/>  
-
-## **Funções Implementadas:**
-
-   
 `conectandoBanco()`: : =  *Faz a conexão entre a aplicação e o banco de dados.*
 
 `executa_db()`: : =  *Efetua um comando SQL com tratamento de erro.*
@@ -37,40 +30,47 @@
 
 `getData()`: : =  *Pega os dados presentes no arquivo de entrada e o passa para um vetor de dados*
 
-`getInitTable()`: : =  *Separa do vetor de dados as informações que serão utilizadas na hora de inicializar a tabela*
+`getInfoInit()`: : =  *Separa do vetor de dados as informações que serão utilizadas na hora de inicializar a tabela*
 
 `getRedoinfos()`: : =  *Separa do vetor de dados as informações que serão utilizadas na hora de executar o REDO*
 
-<!-- `nomedafunção()`: : =  *descrição da função* -->
+`getLinha()`: : =  *Verifica se existe um objeto dado ID por parâmetro*
 
+`parserInfoInit()`: : =  *Parseamento das informações iniciais para preencher a tabela*
+
+`initTable()`: : =  *Faz a inicialização da tabela - percorre vetor e insere no banco*
+
+`createTable()`: : =  *Cria a tabela log*
+
+<!-- `nomedafunção()`: : =  *descrição da função* -->
 
 <div id='como-testar'/>
 
 ## **Como testar/executar:**
 
 - **Requisitos:**
-    - *Python 3.7*
-    - *PostgreSQL*
+  - *Python 3.7*
+  - *PostgreSQL*
 
 - **Como executar:**
-    - Você deve ter em um diretório o arquivo da aplicação e o arquivo de entrada.
-    - Execute o arquivo da aplicação no terminal da seguinte maneira:
+  - Você deve ter em um diretório o arquivo da aplicação e o arquivo de entrada.
+  - Execute o arquivo da aplicação no terminal da seguinte maneira:
         ```
-        python3 log-redo.py <arquivo_de_entrada.txt>
-        ``` 
 
+        python3 log-redo.py <arquivo_de_entrada.txt>
 
 <div id='mecanismo-de-log-redo'/>
 
 ## **Funcionamento:**
 
-- *Descrição do mecanismo de Log REDO*
+- *Descrição do mecanismo de Log REDO:*
+  - Este modelo de log recovery percorre o arquivo de Log em busca de commits e checkpoints, quando um commit de uma transação é encontrado deve se refazer as operações que a transação efetuou. As transações commitadas antes de um Checkpoint não necessitam ser refeitas pois o Checkpoint garante que as informações que foram alteradas e/ou atualizadas estão presentes no disco.
 
 <div id='requisitos'/>
 
 ## **Requisitos do trabalho acadêmico:**
 
-- **Funções a serem implementadas:**    
+- **Funções a serem implementadas:**
 
     1. Carregar o banco de dados com a tabela antes de executar o código do log (para zerar as configurações e dados parciais);  
 
