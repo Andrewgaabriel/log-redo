@@ -124,16 +124,49 @@ def getRedoInfos(data):
 """ -------------------------------------------------------------------------------------------- """
 
 
-""" --------------------------------------Iteração REDO----------------------------------------- """
-# NADA PRONTO
-""" def parserRedo(redoInfos):
-    for line in redoInfos:
-        line = line.split(' ')
-        id = int(line[0])
-        A = int(line[1])
-        B = int(line[2])
-        insereBanco(id, A, B) """
+""" --------------------------------------Limpa entrada----------------------------------------- """
+def limpa(file):
+    data = []
+    for line in file:
+        data.append(line.replace(">", "").replace("<", "").replace("(", " ").replace(")", "").upper())
+    return data
 
+""" -------------------------------------------------------------------------------------------- """
+
+
+""" --------------------------------------Identifica REDO----------------------------------------- """
+# Encontrou start
+def startRedo(line):
+
+    line1 = line.split(' ')
+    um = int(line1[0])
+    dois = int(line1[1])
+    dois1 = dois[1].split(' ')
+    dois2 = dois1[0]
+    dois3 = dois1[1]
+    dois4 = dois3[1].split(",")
+    return dois4
+    #Start [0] | CKPT T3,T4,T5 [1]
+    #CKPT [0] | T3,T4,T5[1]
+    #T3 [0] | T4 [1] | T5 [2]
+    
+# Encontrou transação
+def transactionRedo(line):
+
+    line2 = line.split(',')
+    #trans = int(line2[0])
+    #id = int(line2[1])
+    #colun = int(line2[2])
+    #valor = int(line2[3])
+    return line2
+
+# Encontrou commit
+def commitRedo(line):
+    
+    line3 = line.split(' ')
+    commit = int(line[0])
+    transacao = int(line[1])
+    return transacao
 """ ------------------------------------------------------------------------------------------ """
 
 
