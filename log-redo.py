@@ -27,7 +27,7 @@ def conectandoBanco():
     con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
-                            password='postgres')
+                            password='1234')
     return con
 """ -------------------------------------------------------------------------------------------- """
 
@@ -242,7 +242,7 @@ def createTable():
 """ -------------------------------------------------------------------------------------------- """
 
 
-
+""" ---------------------------------........------------------------------------------ """
 
 def redoIteration(redoInfos):
 
@@ -299,12 +299,69 @@ def redoIteration(redoInfos):
     for i in toRedo:
         print('Transação', i, 'realizou o REDO')
     
-    redoExecution(toRedo,redoInfos) #igor fez o redo
+    redoExecution(toRedo,redoInfos)
+
+""" -------------------------------------------------------------------------------------------- """
+
+
+def printTable(op):
+    sql = 'SELECT * FROM log'
+    result = executa_db(sql)
+    result.reverse()
+    if op == 1:
+        for linha in result:
+            print('\t',linha[0],',A =',linha[1],'\n','\t',linha[0],',B =',linha[2])
+    elif op == 2:
+        print('\t----------------------')
+        print('\t| ID: \t| A:\t| B: |')
+        print('\t----------------------')
+        for linha in result:
+            print('\t|', linha[0],'\t|', linha[1],'\t|', linha[2],'|')
+        print('\t----------------------')
+
+
+def redoExecution(toRedo,redoInfos):
+    toRedoExecution = []
+    for redo in toRedo:
+        for line in redoInfos:
+            if line.startswith(redo):
+                #print('linha da transação: ', line.replace('\n', ''))
+                transaction = transactionRedoFounded(line)
+                #print('Transação a ser refeita:', transaction, '\n\n')
+                toRedoExecution.append(transaction)
+                #redoTransaction(transaction)
+                #break nao da p usar break pq pode ter mais de uma transação a ser refeita
+    redoTransaction(toRedoExecution)
 
 
 
+def redoTransaction(toRedoExecution):
+    toRedoExecution.reverse() # verificar se a versão correta do dado é a do último commit
+    for transaction in toRedoExecution:
+
+        if verifyInDatabase(transaction) == True:
+            print('\n -> Transação já existe no banco de dados')
+            
+        else:
+            print('\nTransação não existe no banco de dados')
+            redoTransactionExecution(transaction) 
         
-    
+
+def verifyInDatabase(transaction):
+    if transaction[2] == 'A':
+        sql = """ SELECT A FROM log WHERE id = '%d'""" % (int(transaction[1]))
+    elif transaction[2] == 'B':
+        sql = """ SELECT B FROM log WHERE id = '%d'""" % (int(transaction[1]))
+
+    result = executa_db(sql)
+
+    if result[0][0] == int(transaction[3]):
+        return True #não precisa fazer update
+    else:
+        return False #precisa fazer update
+
+""" -------------------------------------------------------------------------------------------- """
+
 
 def redoTransactionExecution(transaction):
     print('... Executando transação: ', transaction)
