@@ -19,7 +19,6 @@ class Linha:
 
     def setColunaB(self, colunaB):
         self.colunaB = colunaB
-
 """ -------------------------------------------------------------------------------------------- """
 
 
@@ -28,10 +27,10 @@ def conectandoBanco():
     con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
-                            password='1234')
+                            password='postgres')
     return con
-
 """ -------------------------------------------------------------------------------------------- """
+
 
 
 
@@ -42,6 +41,7 @@ def executa_db(sql):
     try:
         cur.execute(sql)
         con.commit()
+        return cur.fetchall()
     except (Exception, psycopg2.DatabaseError) as error:
         con.rollback()
         con.close()
@@ -55,7 +55,7 @@ def executa_db(sql):
 def openFile(fileName):
     try:
         file = open(fileName, 'r')
-        print('Arquivo aberto com sucesso')
+        #print('... arquivo aberto com sucesso')
         return file
     except:
         print('Erro ao abrir arquivo')
@@ -74,8 +74,8 @@ def printFile(file):
 
 
 """ --------------------Função que pega o nome do arquivo de entrada------------------------------ """
-def getParam():
-    return sys.argv[1]
+def getParam(arg):
+    return sys.argv[arg]
 
 """ -------------------------------------------------------------------------------------------- """
 
@@ -125,10 +125,10 @@ def getRedoInfos(data):
 
 
 """ --------------------------------------Limpa entrada----------------------------------------- """
-def limpa(file):
+def cleanRedoInfos(file):
     data = []
     for line in file:
-        data.append(line.replace(">", "").replace("<", "").replace("(", " ").replace(")", "").upper())
+        data.append(line.replace(">", "").replace("<", "").replace("(", " ").replace(")", " ").upper())
     return data
 
 """ -------------------------------------------------------------------------------------------- """
@@ -136,37 +136,28 @@ def limpa(file):
 
 """ --------------------------------------Identifica REDO----------------------------------------- """
 # Encontrou start
-def startRedo(line):
+def startCheckpointFounded(dirtyLine):
 
-    line1 = line.split(' ')
-    um = int(line1[0])
-    dois = int(line1[1])
-    dois1 = dois[1].split(' ')
-    dois2 = dois1[0]
-    dois3 = dois1[1]
-    dois4 = dois3[1].split(",")
-    return dois4
-    #Start [0] | CKPT T3,T4,T5 [1]
-    #CKPT [0] | T3,T4,T5[1]
-    #T3 [0] | T4 [1] | T5 [2]
-    
+    line = dirtyLine.split(' ')
+    transactions = line[2].split(',')
+    return transactions
+
+
 # Encontrou transação
-def transactionRedo(line):
+def transactionRedoFounded(dirtyLine):
 
-    line2 = line.split(',')
-    #trans = int(line2[0])
-    #id = int(line2[1])
-    #colun = int(line2[2])
-    #valor = int(line2[3])
-    return line2
+    #remove \n
+    line = dirtyLine.replace('\n', '')
+    transactions = line.split(',')
+    return transactions
 
 # Encontrou commit
-def commitRedo(line):
+def commitRedo(dirtyLine):
     
-    line3 = line.split(' ')
-    commit = int(line[0])
-    transacao = int(line[1])
-    return transacao
+    cleanedLine = dirtyLine.split(' ')
+    transaction = cleanedLine[1]
+    return transaction
+
 """ ------------------------------------------------------------------------------------------ """
 
 
@@ -187,7 +178,7 @@ def parserInfoInit(infoInit):
     linhas = []
 
     for line in infoInit:
-        print(line)
+
         linha = Linha()
 
         line1 = line.split(',')
@@ -225,9 +216,10 @@ def parserInfoInit(infoInit):
 """ --------------Inserindo Registro------------------------------------------------------------- """
 
 def insereBanco( id, A, B):
-    sql = """ INSERT INTO log (id, colunaA, colunaB) VALUES ('%d','%d','%d'); """ % (id, A, B)
+    sql = """ INSERT INTO log (id, a, b) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
 """ -------------------------------------------------------------------------------------------- """
+
 
 
 """ -----------------------------Percorre vetor e insere no banco------------------------------ """
@@ -237,38 +229,131 @@ def initTable(linhas):
         A = linha.colunaA
         B = linha.colunaB
         insereBanco(id, A, B)
-
-
 """ ------------------------------------------------------------------------------------------ """ 
+
 
 
 """ ---------------------------------Criar Tabela log------------------------------------------ """
 def createTable():
     sql = 'DROP TABLE IF EXISTS log'
     executa_db(sql)
-    sql = 'CREATE TABLE log (id INTEGER PRIMARY KEY, colunaA INTEGER, colunaB INTEGER);'
+    sql = 'CREATE TABLE log (id INTEGER PRIMARY KEY, a INTEGER, b INTEGER);'
     executa_db(sql)
-
 """ -------------------------------------------------------------------------------------------- """
 
+
+
+
+def redoIteration(redoInfos):
+
+    #flags and vectors
+    toRedo = [] #vetor de transações para fzr o REDO
+    transactions = [] #vetor de transações
+    startedTransactions = [] 
+    openedCkptTransactions = []
+    ckptEndFounded = False
+    ckptStartFounded = False
+
+    for line in redoInfos:
+
+        if line.startswith('END CKPT'):
+            ckptEndFounded = True
+            #print('Encontrou um END CKPT', line)
+
+        if line.startswith('START T'):
+            startedTransactions.append(line.replace('START ', '').replace('\n', ''))
+            #print('Encontrou um START T', line)    
+
+        if line.startswith('START CKPT') and ckptEndFounded == True: #
+            openedCkptTransactions = startCheckpointFounded(line)
+            ckptStartFounded = True
+            #print('Encontrou um START CKPT', start)
+
+            break # para não percorrer o resto do arquivo
+
+        elif line.startswith('START CKPT') and ckptEndFounded == False:
+            #ignora o ckpt
+            start = startCheckpointFounded(line)
+            ckptStartFounded = False
+            #print('Encontrou um START CKPT mas ele não tem fechamento', start)
+
+        if line.startswith('T'): #guarda as transações encontradas
+            transaction = transactionRedoFounded(line)
+            transactions.append(transaction)
+            #print('Encontrou uma transação', transaction)
+
+        if line.startswith('COMMIT'):
+            commit = commitRedo(line)
+            toRedo.append(commit.replace('\n', '')) # Adiciona a transação ao vetor de transações a serem refeitas
+            #print('Encontrou um COMMIT', commit)
+    
+
+    """ print('\nAlterações encontradas:', transactions)
+    print('Transações abertas no checkpoint:', openedCkptTransactions)
+    print('Transações a serem refeitas com o REDO:', toRedo, "\n") """
+
+    
+    for i in openedCkptTransactions:
+        if i not in toRedo:
+            print('Transação', i, 'não realizou o REDO')
+    for i in toRedo:
+        print('Transação', i, 'realizou o REDO')
+    
+    redoExecution(toRedo,redoInfos) #igor fez o redo
+
+
+
+        
+    
+
+def redoTransactionExecution(transaction):
+    print('... Executando transação: ', transaction)
+
+    if transaction[2] == 'A':
+        sql = """ UPDATE log SET A = '%d' WHERE id = '%d'; """ % (int(transaction[3]), int(transaction[1]))
+        executa_db(sql)
+    elif transaction[2] == 'B':
+        sql = """ UPDATE log SET B = '%d' WHERE id = '%d'; """ % (int(transaction[3]), int(transaction[1]))
+        executa_db(sql)
+    else:
+        print('\n !!! Erro ao executar transação - COLUNA INEXISTENTE \n')
+
+    
+
+
+
+
+
+
+
 createTable() # Cria a tabela log (id, colunaA, colunaB)
-file = openFile(getParam()) # Abrindo arquivo de log
+file = openFile(getParam(1)) # Abrindo arquivo de log
 data = getData(file) # Pegando dados do arquivo e colocando em um vetor
 header = getInfoInit(data) # Pegando os dados para preencher a tabela
 redoInfos = getRedoInfos(data) # Pegando os dados para fazer o REDO
 tuplas = parserInfoInit(header) #Pega os valores a serem inseridos no banco
 initTable(tuplas) #Insere valores no Banco
+redoInfosCleaned = cleanRedoInfos(redoInfos) #Limpa o vetor de dados
 
 
 
-print("\nDados totais do arquivo:\n")
+
+
+
+""" print("\nDados totais do arquivo:\n")
 printFile(data)
 print("\nDados para adicionar na tabela:\n")
 printFile(header)
 print("\nDados para fazer o REDO:\n")
 printFile(redoInfos)
-print("\nDados parseados\n")
+print("\nDados LIMPOS para redo:\n")
+printFile(redoInfosCleaned) """
 
+print("\nDados da tabela antes do REDO:\n")
+#printTable(2) # Imprime a tabela log 
+redoIteration(redoInfosCleaned) #Executa o REDO
+print("\nDados da tabela depois do REDO:\n")
+#printTable(2)
 
 file.close()
 

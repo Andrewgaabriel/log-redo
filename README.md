@@ -54,10 +54,10 @@
 
 - **Como executar:**
   - Você deve ter em um diretório o arquivo da aplicação e o arquivo de entrada.
-  - Execute o arquivo da aplicação no terminal da seguinte maneira:
-        ```
-
-        python3 log-redo.py <arquivo_de_entrada.txt>
+  - Antes de executar a aplicação, você deve deve configurar o banco de dados, com nome do banco, usuário, senha e host. Estas alterações devem ser feitas diretamente no [código](log-redo.py) a partir da linha 27.
+  - Execute o arquivo da aplicação no terminal da seguinte maneira:  
+        
+        python3 log-redo.py <arquivo_de_entrada.txt> 
 
 <div id='mecanismo-de-log-redo'/>
 
