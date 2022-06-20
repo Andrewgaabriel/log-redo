@@ -3,23 +3,27 @@ import psycopg2
 import sys
 
 
-""" --------------------Estrutura de dados para armazenar as tuplas---------------------------- """
+
+""" --------------------Estrutura de dados para armazenar as informações do cabeçalho------------ """
 class Linha:
 
     def init(self):
         self.id = 0
-        self.colunaA = ''
-        self.colunaB = ''
+        self.columnA = ''
+        self.columnB = ''
 
     def setId(self, id):
         self.id = id
 
-    def setColunaA(self, colunaA):
-        self.colunaA = colunaA
+    def setColumnA(self, columnA):
+        self.columnA = columnA
 
-    def setColunaB(self, colunaB):
-        self.colunaB = colunaB
+    def setColumnB(self, columnB):
+        self.columnB = columnB
 """ -------------------------------------------------------------------------------------------- """
+
+
+""" -------------------------------------- GENERAL FUNCTIONS ----------------------------------------- """
 
 
 """ ------------------Faz a conexão com o Banco de Dados---------------------------------------- """
@@ -27,10 +31,9 @@ def conectandoBanco():
     con = psycopg2.connect( host='localhost',
                             dbname='trabalholog',
                             user='postgres',
-                            password='1234')
+                            password='postgres')
     return con
 """ -------------------------------------------------------------------------------------------- """
-
 
 
 
@@ -47,8 +50,8 @@ def executa_db(sql):
         con.close()
         return 1
     cur.close()
-
 """ -------------------------------------------------------------------------------------------- """
+
 
 
 """ -----------------Abrindo arquivo de log------------------------------------------------------- """
@@ -59,12 +62,11 @@ def openFile(fileName):
         return file
     except:
         print('Erro ao abrir arquivo')
-
 """ -------------------------------------------------------------------------------------------- """
 
 
 
-""" -----------------------Função para imprimir conteúdo---------------------------------------- """
+""" -----------------------Função para imprimir conteúdo de um vetor/lista/arquivo--------------- """
 def printFile(file):
     for line in file:
         print(line)
@@ -87,7 +89,6 @@ def getData(file):
     for line in file:
         data.append(line)
     return data
-
 """ -------------------------------------------------------------------------------------------- """
 
 
@@ -103,7 +104,6 @@ def getInfoInit(data):
             initTable.append(line)
     
     return initTable
-
 """ -------------------------------------------------------------------------------------------- """
 
 
@@ -119,103 +119,81 @@ def getRedoInfos(data):
         else:
             redoInfos.append(line)
     
-    return redoInfos
 
+    redoInfosCleaned = cleanRedoInfos(redoInfos) # faz a limpeza dos dados antes de retornar
+    return redoInfosCleaned
 """ -------------------------------------------------------------------------------------------- """
 
 
-""" --------------------------------------Limpa entrada----------------------------------------- """
+
+""" --------------------------------------Limpa o vetor para manusear---------------------------- """
 def cleanRedoInfos(file):
     data = []
     for line in file:
         data.append(line.replace(">", "").replace("<", "").replace("(", " ").replace(")", " ").upper())
     return data
-
 """ -------------------------------------------------------------------------------------------- """
 
 
-""" --------------------------------------Identifica REDO----------------------------------------- """
-# Encontrou start
-def startCheckpointFounded(dirtyLine):
-
-    line = dirtyLine.split(' ')
-    transactions = line[2].split(',')
-    return transactions
-
-
-# Encontrou transação
-def transactionRedoFounded(dirtyLine):
-
-    #remove \n
-    line = dirtyLine.replace('\n', '')
-    transactions = line.split(',')
-    return transactions
-
-# Encontrou commit
-def commitRedo(dirtyLine):
-    
-    cleanedLine = dirtyLine.split(' ')
-    transaction = cleanedLine[1]
-    return transaction
-
-""" ------------------------------------------------------------------------------------------ """
-
 
 """ ----------------------Verifica se existe objeto dado ID por parâmetro---------------------- """
-def getLinha(id, linhas):
+def getLinhaIndex(id, linhas):
+
     for linha in linhas:
         if linha.id == id:      
             return linha
     
     return None 
-
 """ ------------------------------------------------------------------------------------------ """
+
 
 
 """ --------------Parseamento das informações iniciais para preencher a tabela---------------- """
 def parserInfoInit(infoInit):
 
-    linhas = []
+    vLinhas = []
 
     for line in infoInit:
 
         linha = Linha()
 
-        line1 = line.split(',')
+        dirtyLine = line.split(',')
 
-        coluna = line1[0]
-        line2 = line1[1].split('=')
-        valor = int(line2[1])
-        id = int(line2[0])
+        column = dirtyLine[0]
+        dirtyLine2 = dirtyLine[1].split('=')
+        value = int(dirtyLine2[1])
+        id = int(dirtyLine2[0])
 
 
-        linhaTemp = getLinha(id, linhas)
+        founded = getLinhaIndex(id, vLinhas)
 
-        if linhaTemp == None:
-
+        if founded == None:
 
             linha.setId(id)
 
-            if coluna == 'A':
-                linha.setColunaA(valor)
-            elif coluna == 'B':
-                linha.setColunaB(valor)
+            if column == 'A':
+                linha.setColumnA(value)
+
+            elif column == 'B':
+                linha.setColumnB(value)
             
-            linhas.append(linha)
+            vLinhas.append(linha)
+
         else:
-            if coluna == 'A':
-                linhaTemp.setColunaA(valor)
-            elif coluna == 'B':
-                linhaTemp.setColunaB(valor)
+            if column == 'A':
+                founded.setColumnA(value)
+
+            elif column == 'B':
+                founded.setColumnB(value)
     
-    return linhas
+    return vLinhas
         
 """ ------------------------------------------------------------------------------------------ """           
 
 
-""" --------------Inserindo Registro------------------------------------------------------------- """
 
-def insereBanco( id, A, B):
+""" ----------------------- Inserindo tupla no banco de dados ------------------------------------- """
+def insertInDatabase( id, A, B):
     sql = """ INSERT INTO log (id, a, b) VALUES ('%d','%d','%d'); """ % (id, A, B)
     executa_db(sql)
 """ -------------------------------------------------------------------------------------------- """
@@ -223,12 +201,12 @@ def insereBanco( id, A, B):
 
 
 """ -----------------------------Percorre vetor e insere no banco------------------------------ """
-def initTable(linhas):
-    for linha in linhas:
+def initTable(vLinhas):
+    for linha in vLinhas:
         id = linha.id
-        A = linha.colunaA
-        B = linha.colunaB
-        insereBanco(id, A, B)
+        A = linha.columnA
+        B = linha.columnB
+        insertInDatabase(id, A, B)
 """ ------------------------------------------------------------------------------------------ """ 
 
 
@@ -242,8 +220,42 @@ def createTable():
 """ -------------------------------------------------------------------------------------------- """
 
 
-""" ---------------------------------........------------------------------------------ """
 
+""" -------------------------------------- REDO FUNCTIONS ----------------------------------------- """
+
+
+
+""" ------------------------------------ encontrou um 'START CKPT' --------------------------------- """
+def startCheckpointFounded(dirtyLine):
+
+    line = dirtyLine.split(' ')
+    cleanLine = line[2].split(',')
+    return cleanLine
+""" ------------------------------------------------------------------------------------------------ """
+
+
+
+""" ------------------------------------ encontrou uma transação ----------------------------------- """
+def transactionRedoFounded(dirtyLine):
+
+    line = dirtyLine.replace('\n', '')
+    cleanLine = line.split(',')
+    return cleanLine
+""" ------------------------------------------------------------------------------------------------ """
+
+
+
+""" ------------------------------------ encontrou um 'COMMIT' ------------------------------------- """
+def commitRedoFounded(dirtyLine):
+    
+    cleanedLine = dirtyLine.split(' ')
+    transaction = cleanedLine[1]
+    return transaction
+""" ------------------------------------------------------------------------------------------------ """
+
+
+
+""" ----------------------------- faz a iteração do mecanismo REDO ---------------------------------- """
 def redoIteration(redoInfos):
 
     #flags and vectors
@@ -252,46 +264,30 @@ def redoIteration(redoInfos):
     startedTransactions = [] 
     openedCkptTransactions = []
     ckptEndFounded = False
-    ckptStartFounded = False
 
     for line in redoInfos:
 
         if line.startswith('END CKPT'):
             ckptEndFounded = True
-            #print('Encontrou um END CKPT', line)
-
+            
         if line.startswith('START T'):
             startedTransactions.append(line.replace('START ', '').replace('\n', ''))
-            #print('Encontrou um START T', line)    
 
-        if line.startswith('START CKPT') and ckptEndFounded == True: #
+        if line.startswith('START CKPT') and ckptEndFounded == True:
             openedCkptTransactions = startCheckpointFounded(line)
-            ckptStartFounded = True
-            #print('Encontrou um START CKPT', start)
-
             break # para não percorrer o resto do arquivo
-
-        elif line.startswith('START CKPT') and ckptEndFounded == False:
-            #ignora o ckpt
-            start = startCheckpointFounded(line)
-            ckptStartFounded = False
-            #print('Encontrou um START CKPT mas ele não tem fechamento', start)
 
         if line.startswith('T'): #guarda as transações encontradas
             transaction = transactionRedoFounded(line)
             transactions.append(transaction)
-            #print('Encontrou uma transação', transaction)
 
         if line.startswith('COMMIT'):
-            commit = commitRedo(line)
+            commit = commitRedoFounded(line)
             toRedo.append(commit.replace('\n', '')) # Adiciona a transação ao vetor de transações a serem refeitas
-            #print('Encontrou um COMMIT', commit)
-    
 
     """ print('\nAlterações encontradas:', transactions)
     print('Transações abertas no checkpoint:', openedCkptTransactions)
     print('Transações a serem refeitas com o REDO:', toRedo, "\n") """
-
     
     for i in openedCkptTransactions:
         if i not in toRedo:
@@ -300,10 +296,11 @@ def redoIteration(redoInfos):
         print('Transação', i, 'realizou o REDO')
     
     redoExecution(toRedo,redoInfos)
-
 """ -------------------------------------------------------------------------------------------- """
 
 
+
+""" ----------------------------- faz a impressão da tabela ---------------------------------- """
 def printTable(op):
     sql = 'SELECT * FROM log'
     result = executa_db(sql)
@@ -318,35 +315,41 @@ def printTable(op):
         for linha in result:
             print('\t|', linha[0],'\t|', linha[1],'\t|', linha[2],'|')
         print('\t----------------------')
+""" -------------------------------------------------------------------------------------------- """
 
 
+
+""" --------------- faz a busca das transações que precisam ser refeitas através do vetor toRedo--------------- """
 def redoExecution(toRedo,redoInfos):
+
     toRedoExecution = []
     for redo in toRedo:
         for line in redoInfos:
             if line.startswith(redo):
-                #print('linha da transação: ', line.replace('\n', ''))
                 transaction = transactionRedoFounded(line)
-                #print('Transação a ser refeita:', transaction, '\n\n')
                 toRedoExecution.append(transaction)
-                #redoTransaction(transaction)
-                #break nao da p usar break pq pode ter mais de uma transação a ser refeita
     redoTransaction(toRedoExecution)
+""" ----------------------------------------------------------------------------------------------------------- """
 
 
 
+""" --------------- faz a iteração para verificar se as transações já estão no banco --------------------------- """
 def redoTransaction(toRedoExecution):
     toRedoExecution.reverse() # verificar se a versão correta do dado é a do último commit
     for transaction in toRedoExecution:
 
         if verifyInDatabase(transaction) == True:
-            print('\n -> Transação já existe no banco de dados')
+            continue
+            #print('\n -> Transação já existe no banco de dados')
             
         else:
-            print('\nTransação não existe no banco de dados')
+            #print('\nTransação não existe no banco de dados')
             redoTransactionExecution(transaction) 
-        
+""" ----------------------------------------------------------------------------------------------------------- """
 
+
+
+""" ------------------------------------------- faz a verificação no banco de dados --------------------------- """
 def verifyInDatabase(transaction):
     if transaction[2] == 'A':
         sql = """ SELECT A FROM log WHERE id = '%d'""" % (int(transaction[1]))
@@ -359,12 +362,13 @@ def verifyInDatabase(transaction):
         return True #não precisa fazer update
     else:
         return False #precisa fazer update
+""" ---------------------------------------------------------------------------------------------------------- """
 
-""" -------------------------------------------------------------------------------------------- """
 
 
+""" ------------------------------------------- executa a transação que precisa fazer o REDO ----------------- """
 def redoTransactionExecution(transaction):
-    print('... Executando transação: ', transaction)
+    #print('... Executando transação: ', transaction)
 
     if transaction[2] == 'A':
         sql = """ UPDATE log SET A = '%d' WHERE id = '%d'; """ % (int(transaction[3]), int(transaction[1]))
@@ -374,27 +378,19 @@ def redoTransactionExecution(transaction):
         executa_db(sql)
     else:
         print('\n !!! Erro ao executar transação - COLUNA INEXISTENTE \n')
-
-    
-
+""" ---------------------------------------------------------------------------------------------------------- """
 
 
+""" --------------------------------------- EXECUÇÃO PRINCIPAL --------------------------------------------------- """
 
 
-
-
-createTable() # Cria a tabela log (id, colunaA, colunaB)
-file = openFile(getParam(1)) # Abrindo arquivo de log
-data = getData(file) # Pegando dados do arquivo e colocando em um vetor
-header = getInfoInit(data) # Pegando os dados para preencher a tabela
-redoInfos = getRedoInfos(data) # Pegando os dados para fazer o REDO
-tuplas = parserInfoInit(header) #Pega os valores a serem inseridos no banco
-initTable(tuplas) #Insere valores no Banco
-redoInfosCleaned = cleanRedoInfos(redoInfos) #Limpa o vetor de dados
-
-
-
-
+createTable()                                   # Cria a tabela log (id, columnA, columnB)
+file = openFile(getParam(1))                    # Abre o arquivo de entrada
+allData = getData(file)                         # Pega os dados do arquivo e coloca em um vetor
+header = getInfoInit(allData)                   # Pega os dados do vetor para preencher a tabela
+redoInfos = getRedoInfos(allData)               # Pega os dados do vetor para fazer o REDO
+tuplas = parserInfoInit(header)                 # Pega os valores a serem inseridos no banco
+initTable(tuplas)                               # Insere valores no Banco
 
 
 """ print("\nDados totais do arquivo:\n")
@@ -406,11 +402,13 @@ printFile(redoInfos)
 print("\nDados LIMPOS para redo:\n")
 printFile(redoInfosCleaned) """
 
-print("\nDados da tabela antes do REDO:\n")
-#printTable(2) # Imprime a tabela log 
-redoIteration(redoInfosCleaned) #Executa o REDO
+""" print("\nDados da tabela antes do REDO:\n")
+printTable(1) # Imprime a tabela log  """
+
+
+redoIteration(redoInfos) #Executa o REDO
 print("\nDados da tabela depois do REDO:\n")
-#printTable(2)
+printTable(1)
 
 file.close()
 
